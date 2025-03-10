@@ -10,14 +10,6 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@index([name])
-}
 
 enum Role {
     MEMBER
@@ -36,7 +28,6 @@ model User {
   // Relations
   events     Event[]  @relation("OrganiserEvents")
   bookings   Booking[]
-  bids       Bid[]
 }
 
 model Event {
@@ -50,7 +41,7 @@ model Event {
 
 model Facility {
   id           Int       @id @default(autoincrement())
-  description  String
+  description  String    @unique
   openingHours String
   bookings     Booking[]
 }
