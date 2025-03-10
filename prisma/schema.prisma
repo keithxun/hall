@@ -64,12 +64,3 @@ model Booking {
   user       User      @relation(fields: [userId], references: [id])
   facility   Facility  @relation(fields: [facilityId], references: [id])
 }
-
-model Bid {
-  id         Int      @id @default(autoincrement())
-  roomNumber String   // Room being bid on
-  bidPoints  Int      // Points used for the bid
-  userId     Int
-
-  user       User     @relation(fields: [userId], references: [id])
-}
