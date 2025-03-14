@@ -13,11 +13,10 @@ export default function FacilityDetailPage() {
     data: facility,
     isLoading,
     error,
+    refetch,
   } = api.facility.getById.useQuery(Number(facilityId));
 
   // Map bookings to calendar events:
-  // Each event will display "Booking #id" as its title,
-  // with start and end times taken from the booking.
   const calendarBookings =
     facility?.bookings.map((booking) => ({
       id: booking.id.toString(),
@@ -25,6 +24,31 @@ export default function FacilityDetailPage() {
       start: new Date(booking.startTime),
       end: new Date(booking.endTime),
     })) ?? [];
+
+  // TRPC mutation for creating a booking
+  const createBooking = api.booking.create.useMutation({
+    onSuccess: () => refetch(),
+  });
+
+  const handleCreateBooking = () => {
+    const startTimeStr = prompt(
+      "Enter booking start time (YYYY-MM-DDTHH:MM)",
+      new Date().toISOString().slice(0, 16),
+    );
+    const endTimeStr = prompt(
+      "Enter booking end time (YYYY-MM-DDTHH:MM)",
+      new Date(new Date().getTime() + 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 16),
+    );
+    if (startTimeStr && endTimeStr && facility) {
+      createBooking.mutate({
+        startTime: new Date(startTimeStr),
+        endTime: new Date(endTimeStr),
+        facilityId: facility.id,
+      });
+    }
+  };
 
   if (isLoading) return <p>Loading facility details...</p>;
   if (error) return <p>Error loading facility: {error.message}</p>;
@@ -37,8 +61,17 @@ export default function FacilityDetailPage() {
         <p className="mb-4 text-lg">Location: {facility.location}</p>
       )}
 
-      <section className="mb-6">
-        <h2 className="mb-4 text-2xl font-semibold">Bookings Calendar</h2>
+      <section className="mb-6 w-full">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold">Bookings Calendar</h2>
+          <button
+            className="rounded bg-blue-500 p-2 text-white"
+            onClick={handleCreateBooking}
+          >
+            Create Booking
+          </button>
+        </div>
+
         <div className="rounded bg-white p-2 text-black shadow">
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
@@ -47,11 +80,6 @@ export default function FacilityDetailPage() {
             height="auto"
             contentHeight="auto"
             aspectRatio={1.0}
-            eventTimeFormat={{
-              hour: "numeric",
-              minute: "2-digit",
-              meridiem: "short",
-            }}
             headerToolbar={{
               left: "",
               center: "title",
