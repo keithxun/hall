@@ -90,25 +90,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-600 to-green-400 text-white">
-      {/* Header - Todo: Absorb header into clerk component */}
-      <header className="container mx-auto px-4 py-8">
-        <nav className="flex flex-col items-center justify-between sm:flex-row">
-          <h1 className="mb-4 text-3xl font-bold sm:mb-0">RH App</h1>
-          <div className="space-x-4">
-            <Link className="hover:underline" href="/bookings">
-              Bookings
-            </Link>
-            <Link className="hover:underline" href="/events">
-              Events
-            </Link>
-            <Link className="hover:underline" href="/profile">
-              Profile
-            </Link>
-          </div>
-        </nav>
-      </header>
-
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col items-center gap-6 text-center">
           <h2 className="text-4xl font-extrabold">Welcome to RH App!</h2>
