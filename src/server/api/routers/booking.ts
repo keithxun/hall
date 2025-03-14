@@ -9,14 +9,16 @@ export const bookingRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
       z.object({
-        slot: z.date(),
+        startTime: z.date(),
+        endTime: z.date(),
         facilityId: z.number(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const booking = await ctx.db.booking.create({
         data: {
-          slot: input.slot,
+          startTime: input.startTime,
+          endTime: input.endTime,
           facilityId: input.facilityId,
           userId: ctx.auth.userId!,
         },
@@ -47,7 +49,8 @@ export const bookingRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.number(),
-        slot: z.date().optional(),
+        startTime: z.date().optional(),
+        endTime: z.date().optional(),
         facilityId: z.number().optional(),
       }),
     )
@@ -65,13 +68,21 @@ export const bookingRouter = createTRPCRouter({
       const updatedBooking = await ctx.db.booking.update({
         where: { id: input.id },
         data: {
-          // Only update the fields provided in the input
-          slot: input.slot,
+          startTime: input.startTime,
+          endTime: input.endTime,
           facilityId: input.facilityId,
         },
       });
       return updatedBooking;
     }),
+
+  getMyBookings: protectedProcedure.query(async ({ ctx }) => {
+    // No need to check auth actually since this is a protected procedure but type casting wants it -.-
+    if (!ctx.auth.userId) throw new Error("User not authenticated");
+    return await ctx.db.booking.findMany({
+      where: { userId: ctx.auth.userId },
+    });
+  }),
 
   getAll: publicProcedure.query(async ({ ctx }) => {
     return await ctx.db.booking.findMany();
