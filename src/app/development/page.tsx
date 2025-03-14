@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { api } from "~/trpc/react";
 
 // ----- Booking Item Component -----
@@ -9,14 +10,20 @@ interface BookingItemProps {
     id: number;
     userId: string;
     facilityId: number;
-    slot: Date;
+    startTime: Date;
+    endTime: Date;
   };
-  onUpdate: (id: number, slot: Date, facilityId: number) => void;
+  onUpdate: (
+    id: number,
+    startTime: Date,
+    endTime: Date,
+    facilityId: number,
+  ) => void;
   onDelete: (id: number) => void;
 }
 
 function BookingItem({ booking, onUpdate, onDelete }: BookingItemProps) {
-  // Using getUserName endpoint to display username instead of raw userId
+  // Use getUserName endpoint to display a username instead of raw userId.
   const { data: username } = api.auth.getUserName.useQuery(booking.userId);
 
   return (
@@ -26,24 +33,31 @@ function BookingItem({ booking, onUpdate, onDelete }: BookingItemProps) {
         <br />
         User: {username?.name ?? "Loading..."} | Facility: {booking.facilityId}
         <br />
-        Slot: {new Date(booking.slot).toLocaleString()}
+        Start: {new Date(booking.startTime).toLocaleString()}
+        <br />
+        End: {new Date(booking.endTime).toLocaleString()}
       </div>
       <div className="mt-2 flex gap-2">
         <button
           className="rounded bg-green-500 p-2 text-white"
           onClick={() => {
-            const newSlotVal = prompt(
-              "Enter new slot (YYYY-MM-DDTHH:MM)",
-              new Date(booking.slot).toISOString().slice(0, 16),
+            const newStartVal = prompt(
+              "Enter new start time (YYYY-MM-DDTHH:MM)",
+              new Date(booking.startTime).toISOString().slice(0, 16),
+            );
+            const newEndVal = prompt(
+              "Enter new end time (YYYY-MM-DDTHH:MM)",
+              new Date(booking.endTime).toISOString().slice(0, 16),
             );
             const newFacility = prompt(
               "Enter new facility id",
               booking.facilityId.toString(),
             );
-            if (newSlotVal && newFacility) {
+            if (newStartVal && newEndVal && newFacility) {
               onUpdate(
                 booking.id,
-                new Date(newSlotVal),
+                new Date(newStartVal),
+                new Date(newEndVal),
                 parseInt(newFacility, 10),
               );
             }
@@ -67,19 +81,20 @@ function BookingItem({ booking, onUpdate, onDelete }: BookingItemProps) {
 }
 
 // ----- Event Item Component -----
+// Note: The Event model now uses startTime and endTime, and does not include a location field.
 interface EventItemProps {
   event: {
     id: number;
-    location: string;
-    slot: Date;
+    startTime: Date;
+    endTime: Date;
     description: string;
-    signUpLink: string;
-    organiserId: string;
+    signUpLink: string | null;
+    organiserIds: string[];
   };
   onUpdate: (
     id: number,
-    location: string,
-    slot: Date,
+    startTime: Date,
+    endTime: Date,
     description: string,
     signUpLink: string,
   ) => void;
@@ -87,26 +102,38 @@ interface EventItemProps {
 }
 
 function EventItem({ event, onUpdate, onDelete }: EventItemProps) {
-  const { data: organiser } = api.auth.getUserName.useQuery(event.organiserId);
+  // Display the first organiser's name for reference.
+  const organiserId = event.organiserIds[0];
+  const { data: organiser } = organiserId
+    ? api.auth.getUserName.useQuery(organiserId)
+    : { data: null };
+
   return (
     <li key={event.id} className="rounded border p-4">
       <div>
         <strong>Event #{event.id}</strong>
         <br />
-        Location: {event.location} <br />
-        Slot: {new Date(event.slot).toLocaleString()} <br />
-        Description: {event.description} <br />
-        SignUp Link: {event.signUpLink} <br />
+        Start: {new Date(event.startTime).toLocaleString()}
+        <br />
+        End: {new Date(event.endTime).toLocaleString()}
+        <br />
+        Description: {event.description}
+        <br />
+        SignUp Link: {event.signUpLink ?? "N/A"}
+        <br />
         Organiser: {organiser?.name ?? "Loading..."}
       </div>
       <div className="mt-2 flex gap-2">
         <button
           className="rounded bg-green-500 p-2 text-white"
           onClick={() => {
-            const newLocation = prompt("Enter new location", event.location);
-            const newSlotVal = prompt(
-              "Enter new slot (YYYY-MM-DDTHH:MM)",
-              new Date(event.slot).toISOString().slice(0, 16),
+            const newStartVal = prompt(
+              "Enter new start time (YYYY-MM-DDTHH:MM)",
+              new Date(event.startTime).toISOString().slice(0, 16),
+            );
+            const newEndVal = prompt(
+              "Enter new end time (YYYY-MM-DDTHH:MM)",
+              new Date(event.endTime).toISOString().slice(0, 16),
             );
             const newDescription = prompt(
               "Enter new description",
@@ -114,13 +141,18 @@ function EventItem({ event, onUpdate, onDelete }: EventItemProps) {
             );
             const newSignUpLink = prompt(
               "Enter new sign up link",
-              event.signUpLink,
+              event.signUpLink ?? "",
             );
-            if (newLocation && newSlotVal && newDescription && newSignUpLink) {
+            if (
+              newStartVal &&
+              newEndVal &&
+              newDescription &&
+              newSignUpLink !== null
+            ) {
               onUpdate(
                 event.id,
-                newLocation,
-                new Date(newSlotVal),
+                new Date(newStartVal),
+                new Date(newEndVal),
                 newDescription,
                 newSignUpLink,
               );
@@ -147,7 +179,7 @@ function EventItem({ event, onUpdate, onDelete }: EventItemProps) {
 export default function DevelopmentPage() {
   const [activeTab, setActiveTab] = useState<"bookings" | "events">("bookings");
 
-  // Bookings queries & mutations
+  // ----- Bookings Queries & Mutations -----
   const { data: bookings, refetch: refetchBookings } =
     api.booking.getAll.useQuery();
   const createBooking = api.booking.create.useMutation({
@@ -159,10 +191,11 @@ export default function DevelopmentPage() {
   const deleteBooking = api.booking.delete.useMutation({
     onSuccess: () => refetchBookings(),
   });
-  const [newSlot, setNewSlot] = useState("");
+  const [newBookingStart, setNewBookingStart] = useState("");
+  const [newBookingEnd, setNewBookingEnd] = useState("");
   const [newFacilityId, setNewFacilityId] = useState("");
 
-  // Events queries & mutations
+  // ----- Events Queries & Mutations -----
   const { data: events, refetch: refetchEvents } = api.event.getAll.useQuery();
   const createEvent = api.event.create.useMutation({
     onSuccess: () => refetchEvents(),
@@ -173,8 +206,8 @@ export default function DevelopmentPage() {
   const deleteEvent = api.event.delete.useMutation({
     onSuccess: () => refetchEvents(),
   });
-  const [newLocation, setNewLocation] = useState("");
-  const [newEventSlot, setNewEventSlot] = useState("");
+  const [newEventStart, setNewEventStart] = useState("");
+  const [newEventEnd, setNewEventEnd] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newSignUpLink, setNewSignUpLink] = useState("");
 
@@ -211,9 +244,17 @@ export default function DevelopmentPage() {
             <div className="flex flex-col gap-2">
               <input
                 type="datetime-local"
-                value={newSlot}
-                onChange={(e) => setNewSlot(e.target.value)}
+                value={newBookingStart}
+                onChange={(e) => setNewBookingStart(e.target.value)}
                 className="border p-2"
+                placeholder="Start Time"
+              />
+              <input
+                type="datetime-local"
+                value={newBookingEnd}
+                onChange={(e) => setNewBookingEnd(e.target.value)}
+                className="border p-2"
+                placeholder="End Time"
               />
               <input
                 type="number"
@@ -225,15 +266,17 @@ export default function DevelopmentPage() {
               <button
                 className="rounded bg-blue-500 p-2 text-white"
                 onClick={() => {
-                  if (!newSlot || !newFacilityId) {
-                    alert("Please enter both slot and facility id");
+                  if (!newBookingStart || !newBookingEnd || !newFacilityId) {
+                    alert("Please fill in all fields");
                     return;
                   }
                   createBooking.mutate({
-                    slot: new Date(newSlot),
+                    startTime: new Date(newBookingStart),
+                    endTime: new Date(newBookingEnd),
                     facilityId: parseInt(newFacilityId, 10),
                   });
-                  setNewSlot("");
+                  setNewBookingStart("");
+                  setNewBookingEnd("");
                   setNewFacilityId("");
                 }}
               >
@@ -251,8 +294,13 @@ export default function DevelopmentPage() {
                   <BookingItem
                     key={booking.id}
                     booking={booking}
-                    onUpdate={(id, slot, facilityId) => {
-                      updateBooking.mutate({ id, slot, facilityId });
+                    onUpdate={(id, startTime, endTime, facilityId) => {
+                      updateBooking.mutate({
+                        id,
+                        startTime,
+                        endTime,
+                        facilityId,
+                      });
                     }}
                     onDelete={(id) => {
                       deleteBooking.mutate({ id });
@@ -275,17 +323,17 @@ export default function DevelopmentPage() {
             <h3 className="mb-2 text-lg font-semibold">Create New Event</h3>
             <div className="flex flex-col gap-2">
               <input
-                type="text"
-                placeholder="Location"
-                value={newLocation}
-                onChange={(e) => setNewLocation(e.target.value)}
+                type="datetime-local"
+                placeholder="Start Time"
+                value={newEventStart}
+                onChange={(e) => setNewEventStart(e.target.value)}
                 className="border p-2"
               />
               <input
                 type="datetime-local"
-                placeholder="Slot"
-                value={newEventSlot}
-                onChange={(e) => setNewEventSlot(e.target.value)}
+                placeholder="End Time"
+                value={newEventEnd}
+                onChange={(e) => setNewEventEnd(e.target.value)}
                 className="border p-2"
               />
               <input
@@ -297,7 +345,7 @@ export default function DevelopmentPage() {
               />
               <input
                 type="url"
-                placeholder="SignUp Link"
+                placeholder="SignUp Link (optional)"
                 value={newSignUpLink}
                 onChange={(e) => setNewSignUpLink(e.target.value)}
                 className="border p-2"
@@ -305,18 +353,18 @@ export default function DevelopmentPage() {
               <button
                 className="rounded bg-blue-500 p-2 text-white"
                 onClick={() => {
-                  if (!newLocation || !newEventSlot || !newDescription) {
-                    alert("Please fill in all fields");
+                  if (!newEventStart || !newEventEnd || !newDescription) {
+                    alert("Please fill in all required fields");
                     return;
                   }
                   createEvent.mutate({
-                    location: newLocation,
-                    slot: new Date(newEventSlot),
+                    startTime: new Date(newEventStart),
+                    endTime: new Date(newEventEnd),
                     description: newDescription,
                     signUpLink: newSignUpLink,
                   });
-                  setNewLocation("");
-                  setNewEventSlot("");
+                  setNewEventStart("");
+                  setNewEventEnd("");
                   setNewDescription("");
                   setNewSignUpLink("");
                 }}
@@ -335,11 +383,17 @@ export default function DevelopmentPage() {
                   <EventItem
                     key={event.id}
                     event={event}
-                    onUpdate={(id, location, slot, description, signUpLink) => {
+                    onUpdate={(
+                      id,
+                      startTime,
+                      endTime,
+                      description,
+                      signUpLink,
+                    ) => {
                       updateEvent.mutate({
                         id,
-                        location,
-                        slot,
+                        startTime,
+                        endTime,
                         description,
                         signUpLink,
                       });
@@ -356,6 +410,12 @@ export default function DevelopmentPage() {
           </div>
         </section>
       )}
+
+      <div className="mt-8">
+        <Link href="/" className="text-blue-500 underline">
+          &larr; Back to Home
+        </Link>
+      </div>
     </div>
   );
 }
