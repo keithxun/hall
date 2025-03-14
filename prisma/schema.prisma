@@ -14,7 +14,7 @@ datasource db {
 // Instead, we use Clerk to manage users externally. Clerk's user model
 // typically includes (but is not limited to) the following fields:
 //
-//   - userIDd string         // Unique Clerk user identifier
+//   - userId: string         // Unique Clerk user identifier
 //   - email: string          // User's primary email address
 //   - username: string?      // Optional username
 //   - createdAt: DateTime    // Account creation date
@@ -28,35 +28,35 @@ datasource db {
 // ---------------------------------------------------------------------
 
 model Event {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   startTime    DateTime
   endTime      DateTime
   description  String
-  signUpLink   String
-  bookingId    Int      
-  booking      Booking  @relation(fields: [bookingId], references: [id])
-  organiserId  String   // Clerk user id for the organiser
+  signUpLink   String?
+  // Optional booking reference – not every event may require a facility booking.
+  bookingId    Int?      
+  booking      Booking?  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  // Allow multiple organisers for an event.
+  organiserIds String[]
 }
 
 model Facility {
-  id           Int       @id @default(autoincrement())
-  description  String    @unique
-  openingHours String
-  bookings     Booking[]
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  bookings Booking[]
 }
 
 model Booking {
   id           Int       @id @default(autoincrement())
-  StartTime    DateTime
-  EndTime      DateTime
-  organiserIds String[]  // Array of Clerk user IDs for organisers
+  startTime    DateTime
+  endTime      DateTime
+  userId       Int
   facilityId   Int
-
   facility     Facility  @relation(fields: [facilityId], references: [id])
 }
 
 model CCA {
-  id       Int     @id @default(autoincrement())
-  name     String
+  id       Int    @id @default(autoincrement())
+  name     String @unique
   category String
 }
