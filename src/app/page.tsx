@@ -89,7 +89,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-800 to-blue-900 text-white">
+    <div className="min-h-screen text-white">
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col items-center gap-6 text-center">
           <h2 className="text-4xl font-extrabold">Welcome to RH App!</h2>

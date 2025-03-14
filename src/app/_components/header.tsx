@@ -24,7 +24,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="relative bg-gradient-to-r from-gray-900 to-gray-700 p-4 dark:bg-gradient-to-r dark:from-gray-900 dark:to-gray-700">
+    <header className="relative p-4">
       <div className="flex h-16 items-center justify-between">
         {/* Logo and App Name */}
         <div className="flex items-center gap-2">
