@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className={`${GeistSans.variable}`}>
-        <body>
+        <body className="bg-gradient-to-b from-gray-800 to-blue-900 text-white">
           <TRPCReactProvider>
             <Header />
             {children}

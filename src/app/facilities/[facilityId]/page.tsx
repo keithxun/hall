@@ -2,16 +2,53 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
 import { api } from "~/trpc/react";
 
 export default function FacilityDetailPage() {
   const { facilityId } = useParams();
-
   const {
     data: facility,
     isLoading,
     error,
+    refetch,
   } = api.facility.getById.useQuery(Number(facilityId));
+
+  // Map bookings to calendar events:
+  const calendarBookings =
+    facility?.bookings.map((booking) => ({
+      id: booking.id.toString(),
+      title: `Booking #${booking.id}`,
+      start: new Date(booking.startTime),
+      end: new Date(booking.endTime),
+    })) ?? [];
+
+  // TRPC mutation for creating a booking
+  const createBooking = api.booking.create.useMutation({
+    onSuccess: () => refetch(),
+  });
+
+  const handleCreateBooking = () => {
+    const startTimeStr = prompt(
+      "Enter booking start time (YYYY-MM-DDTHH:MM)",
+      new Date().toISOString().slice(0, 16),
+    );
+    const endTimeStr = prompt(
+      "Enter booking end time (YYYY-MM-DDTHH:MM)",
+      new Date(new Date().getTime() + 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 16),
+    );
+    if (startTimeStr && endTimeStr && facility) {
+      createBooking.mutate({
+        startTime: new Date(startTimeStr),
+        endTime: new Date(endTimeStr),
+        facilityId: facility.id,
+      });
+    }
+  };
 
   if (isLoading) return <p>Loading facility details...</p>;
   if (error) return <p>Error loading facility: {error.message}</p>;
@@ -24,26 +61,38 @@ export default function FacilityDetailPage() {
         <p className="mb-4 text-lg">Location: {facility.location}</p>
       )}
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-2xl font-semibold">Bookings</h2>
-        {facility.bookings && facility.bookings.length > 0 ? (
-          <ul className="space-y-2">
-            {facility.bookings.map((booking) => (
-              <li key={booking.id} className="rounded border p-2">
-                <p>
-                  <span className="font-semibold">Start:</span>{" "}
-                  {new Date(booking.startTime).toLocaleString()}
-                </p>
-                <p>
-                  <span className="font-semibold">End:</span>{" "}
-                  {new Date(booking.endTime).toLocaleString()}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No bookings available.</p>
-        )}
+      <section className="mb-6 w-full">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold">Bookings Calendar</h2>
+          <button
+            className="rounded bg-blue-500 p-2 text-white"
+            onClick={handleCreateBooking}
+          >
+            Create Booking
+          </button>
+        </div>
+
+        <div className="rounded bg-white p-2 text-black shadow">
+          <FullCalendar
+            plugins={[dayGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            events={calendarBookings}
+            height="auto"
+            contentHeight="auto"
+            aspectRatio={1.0}
+            headerToolbar={{
+              left: "",
+              center: "title",
+              right: "",
+            }}
+            footerToolbar={{
+              left: "",
+              center: "prev,next",
+              right: "",
+            }}
+            handleWindowResize={true}
+          />
+        </div>
       </section>
 
       <Link
