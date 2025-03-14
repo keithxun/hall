@@ -7,18 +7,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// We no longer maintain a local User model.
-// Instead, any user relationship is handled via Clerk,
-// and we store the Clerk user ID (a string) in our records.
+// ---------------------------------------------------------------------
+// Clerk User Model Reference
+//
+// We no longer maintain a local User model in this schema.
+// Instead, we use Clerk to manage users externally. Clerk's user model
+// typically includes (but is not limited to) the following fields:
+//
+//   - userIDd string         // Unique Clerk user identifier
+//   - email: string          // User's primary email address
+//   - username: string?      // Optional username
+//   - createdAt: DateTime    // Account creation date
+//   - updatedAt: DateTime    // Last profile update
+//
+// For further details, please refer to Clerk's documentation:
+// https://docs.clerk.dev/
+//
+// In our records, we store only the Clerk user id (a string) to reference
+// the user. Any additional user details can be retrieved via Clerk's APIs.
+// ---------------------------------------------------------------------
 
 model Event {
-  id           Int    @id @default(autoincrement())
-  location     String
-  slot         DateTime
+  id           Int      @id @default(autoincrement())
+  startTime    DateTime
+  endTime      DateTime
   description  String
   signUpLink   String
-  // Store Clerk user id for the organiser
-  organiserId  String
+  bookingId    Int      
+  booking      Booking  @relation(fields: [bookingId], references: [id])
+  organiserId  String   // Clerk user id for the organiser
 }
 
 model Facility {
@@ -29,11 +46,17 @@ model Facility {
 }
 
 model Booking {
-  id         Int       @id @default(autoincrement())
-  slot       DateTime  // Booking timeslot
-  // Store Clerk user id for the person who booked
-  userId     String
-  facilityId Int
-  
-  facility   Facility  @relation(fields: [facilityId], references: [id])
+  id           Int       @id @default(autoincrement())
+  StartTime    DateTime
+  EndTime      DateTime
+  organiserIds String[]  // Array of Clerk user IDs for organisers
+  facilityId   Int
+
+  facility     Facility  @relation(fields: [facilityId], references: [id])
+}
+
+model CCA {
+  id       Int     @id @default(autoincrement())
+  name     String
+  category String
 }
