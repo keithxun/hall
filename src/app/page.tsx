@@ -28,9 +28,8 @@ export default function LandingPage() {
       const mapped = eventsData.map((event) => ({
         id: event.id.toString(),
         title: event.description,
-        start: new Date(event.slot),
-        // Assume events last 1 hour; adjust as needed.
-        end: new Date(new Date(event.slot).getTime() + 60 * 60 * 1000),
+        start: new Date(event.startTime),
+        end: new Date(event.endTime),
         allDay: false,
       }));
       setCalendarEvents(mapped);
@@ -60,7 +59,6 @@ export default function LandingPage() {
   }) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
-        {/* Overlay */}
         <div
           className="absolute inset-0 bg-black opacity-50"
           onClick={onClose}
@@ -92,7 +90,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-600 to-green-400 text-white">
-      {/* Header */}
+      {/* Header - Todo: Absorb header into clerk component */}
       <header className="container mx-auto px-4 py-8">
         <nav className="flex flex-col items-center justify-between sm:flex-row">
           <h1 className="mb-4 text-3xl font-bold sm:mb-0">RH App</h1>
