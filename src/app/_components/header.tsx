@@ -19,12 +19,12 @@ export default function Header() {
   const navLinks = [
     { href: "/bookings", label: "Bookings" },
     { href: "/facilities", label: "Facilities" },
-    { href: "/events", label: "Events" }, // Not yet implemented
-    { href: "/profile", label: "Profile" }, // Not yet implemented
+    { href: "/events", label: "Events" },
+    { href: "/profile", label: "Profile" },
   ];
 
   return (
-    <header className="relative bg-gradient-to-r from-green-600 to-green-400 p-4">
+    <header className="relative bg-gradient-to-r from-gray-900 to-gray-700 p-4 dark:bg-gradient-to-r dark:from-gray-900 dark:to-gray-700">
       <div className="flex h-16 items-center justify-between">
         {/* Logo and App Name */}
         <div className="flex items-center gap-2">
@@ -35,7 +35,7 @@ export default function Header() {
             RHapp
           </Link>
         </div>
-        {/* Desktop Navigation Links Centered */}
+
         <nav className="hidden md:flex md:flex-1 md:justify-center">
           {navLinks.map((link) => (
             <Link
@@ -47,7 +47,7 @@ export default function Header() {
             </Link>
           ))}
         </nav>
-        {/* Authentication Buttons and Mobile Menu Toggle */}
+
         <div className="flex items-center gap-4">
           <SignedOut>
             <SignInButton mode="modal">
@@ -103,14 +103,14 @@ export default function Header() {
       </div>
       {/* Mobile Dropdown Menu for Navigation Links Only */}
       {isMenuOpen && (
-        <div className="absolute inset-x-0 top-full bg-white p-4 md:hidden">
+        <div className="absolute inset-x-0 top-full bg-gray-800 p-4 md:hidden">
           <nav className="flex flex-col items-center gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsMenuOpen(false)}
-                className="text-gray-800 hover:underline"
+                className="text-white hover:underline"
               >
                 {link.label}
               </Link>

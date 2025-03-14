@@ -89,20 +89,20 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-600 to-purple-400 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-800 to-blue-900 text-white">
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col items-center gap-6 text-center">
           <h2 className="text-4xl font-extrabold">Welcome to RH App!</h2>
           <p className="max-w-md text-lg">(Insert some intro text here idk)</p>
           <div className="flex flex-col gap-4 sm:flex-row">
             <Link
-              className="rounded bg-white px-6 py-3 font-bold text-purple-600 shadow transition hover:bg-green-100"
+              className="rounded bg-white px-6 py-3 font-bold text-blue-900 shadow transition hover:bg-green-100"
               href="/facilities"
             >
               Book Facilities
             </Link>
             <Link
-              className="rounded bg-white px-6 py-3 font-bold text-purple-600 shadow transition hover:bg-green-100"
+              className="rounded bg-white px-6 py-3 font-bold text-blue-900 shadow transition hover:bg-green-100"
               href="/events"
             >
               Create Event
