@@ -19,6 +19,7 @@ datasource db {
 //   - username: string?      // Optional username
 //   - createdAt: DateTime    // Account creation date
 //   - updatedAt: DateTime    // Last profile update
+//   - CCA: string[]          // Array of CCAs
 //
 // For further details, please refer to Clerk's documentation:
 // https://docs.clerk.dev/
