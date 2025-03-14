@@ -18,8 +18,9 @@ export default function Header() {
   // Navigation links for the app
   const navLinks = [
     { href: "/bookings", label: "Bookings" },
-    { href: "/events", label: "Events" },
-    { href: "/profile", label: "Profile" },
+    { href: "/facilities", label: "Facilities" },
+    { href: "/events", label: "Events" }, // Not yet implemented
+    { href: "/profile", label: "Profile" }, // Not yet implemented
   ];
 
   return (
@@ -34,16 +35,32 @@ export default function Header() {
             RHapp
           </Link>
         </div>
-
+        {/* Desktop Navigation Links Centered */}
+        <nav className="hidden md:flex md:flex-1 md:justify-center">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="mx-4 font-bold text-white hover:underline"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        {/* Authentication Buttons and Mobile Menu Toggle */}
         <div className="flex items-center gap-4">
           <SignedOut>
-            <SignInButton mode="modal" />
-            <SignUpButton mode="modal" />
+            <SignInButton mode="modal">
+              <button className="font-bold text-white">Login</button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button className="font-bold text-white">Register</button>
+            </SignUpButton>
           </SignedOut>
           <SignedIn>
             <UserButton />
           </SignedIn>
-          {/* Mobile Menu Toggle for nav links */}
+          {/* Hamburger Icon visible only on mobile */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -65,7 +82,6 @@ export default function Header() {
                   />
                 </svg>
               ) : (
-                // Hamburger icon for menu
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6"
@@ -87,14 +103,14 @@ export default function Header() {
       </div>
       {/* Mobile Dropdown Menu for Navigation Links Only */}
       {isMenuOpen && (
-        <div className="absolute left-0 right-0 top-full bg-white p-4 md:hidden">
-          <nav className="flex flex-col gap-2">
+        <div className="absolute inset-x-0 top-full bg-white p-4 md:hidden">
+          <nav className="flex flex-col items-center gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsMenuOpen(false)}
-                className="hover:underline"
+                className="text-gray-800 hover:underline"
               >
                 {link.label}
               </Link>
