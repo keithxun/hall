@@ -1,0 +1,17 @@
+[
+  { "name": "Band Room", "location": "Communal Hall" },
+  { "name": "Basketball Court", "location": "Others" },
+  { "name": "Stage", "location": "Communal Hall" },
+  { "name": "Main Area (UL)", "location": "Upper Lounge" },
+  { "name": "UL Conf Rm", "location": "Upper Lounge" },
+  { "name": "Comm Hall (Front)", "location": "Communal Hall" },
+  { "name": "Dance Studio", "location": "Others" },
+  { "name": "Hard Court", "location": "Others" },
+  { "name": "Heritage Corner", "location": "Communal Hall" },
+  { "name": "Alumni Room", "location": "Upper Lounge" },
+  { "name": "TV Room", "location": "Lower Lounge" },
+  { "name": "Meeting Room", "location": "Lower Lounge" },
+  { "name": "Pool Area", "location": "Lower Lounge" },
+  { "name": "Kuok Conf Rm", "location": "Kuok Foundation House" },
+  { "name": "Comm Hall (Back)", "location": "Communal Hall" }
+]

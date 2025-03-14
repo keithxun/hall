@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { clerkClient } from "@clerk/nextjs/server";
 import {
   createTRPCRouter,
@@ -15,9 +15,7 @@ export const authRouter = createTRPCRouter({
     return { greeting: "Hello, guest!" };
   }),
 
-  // Protected endpoint: returns the authenticated user's status
   getAuthStatus: protectedProcedure.query(async ({ ctx }) => {
-    // At this point, ctx.auth.userId is guaranteed to exist.
     return {
       userId: ctx.auth.userId,
       message: "You are authenticated",
@@ -41,15 +39,16 @@ export const authRouter = createTRPCRouter({
     return { name: user.username };
   }),
 
-  updateName: protectedProcedure
+  // Combined update endpoint to update name, roomNumber, and associated CCAs
+  updateUser: protectedProcedure
     .input(
       z.object({
-        name: z.string(),
-        roomNumber: z.string(),
+        name: z.string().optional(),
+        roomNumber: z.string().optional(),
+        ccaIds: z.array(z.number()).optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      // If you're using protectedProcedure, you should have a valid user session.
       const targetUserId = ctx.auth.userId;
       if (!targetUserId) {
         throw new Error("No user id available");
@@ -57,8 +56,12 @@ export const authRouter = createTRPCRouter({
       const clerk = await clerkClient();
       await clerk.users.updateUserMetadata(targetUserId, {
         publicMetadata: {
-          name: input.name,
-          roomNumber: input.roomNumber,
+          // Conditionally update fields based on input, ... is used to add object prop to surrounding object
+          ...(input.name !== undefined && { name: input.name }),
+          ...(input.roomNumber !== undefined && {
+            roomNumber: input.roomNumber,
+          }),
+          ...(input.ccaIds !== undefined && { ccas: input.ccaIds }),
         },
       });
       return { success: true };

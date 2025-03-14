@@ -1,4 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import facilitiesData from "./data/facilities.json";
+import ccasData from "./data/ccas.json";
+
 const prisma = new PrismaClient();
 
 // Sample Clerk user IDs
@@ -10,130 +13,116 @@ async function clearOldData() {
   await prisma.booking.deleteMany({});
   await prisma.event.deleteMany({});
   await prisma.facility.deleteMany({});
+  await prisma.cCA.deleteMany({});
 }
 
 async function main() {
   // Clear past data
   await clearOldData();
 
-  // --- Create Facilities ---
-  const communityHall = await prisma.facility.upsert({
-    where: { description: "Community Hall" },
-    update: {},
-    create: {
-      description: "Community Hall",
-      openingHours: "8:00 AM - 10:00 PM",
-    },
-  });
+  // --- Seed Facilities from facilities.json ---
+  const facilities = [];
+  for (const facility of facilitiesData) {
+    // Map the file's keys to our model's fields:
+    // facilityName -> name, facilityLocation -> location.
+    const created = await prisma.facility.upsert({
+      where: { name: facility.name },
+      update: {},
+      create: {
+        name: facility.name,
+        location: facility.location,
+      },
+    });
+    facilities.push(created);
+  }
 
-  const gym = await prisma.facility.upsert({
-    where: { description: "Gym" },
-    update: {},
-    create: {
-      description: "Gym",
-      openingHours: "6:00 AM - 11:00 PM",
-    },
-  });
+  // --- Seed CCAs from ccas.json ---
+  const ccas = [];
+  for (const cca of ccasData) {
+    const createdCCA = await prisma.cCA.upsert({
+      where: { name: cca.name },
+      update: {},
+      create: {
+        name: cca.name,
+        category: cca.category,
+      },
+    });
+    ccas.push(createdCCA);
+  }
 
-  const upperLounge = await prisma.facility.upsert({
-    where: { description: "Upper Lounge" },
-    update: {},
-    create: {
-      description: "Upper Lounge",
-      openingHours: "9:00 AM - 9:00 PM",
-    },
-  });
+  // --- Create Sample Bookings ---
+  // For sample purposes, we'll select a facility from the seeded list.
+  // For example, pick "Main Area (UL)" if available, else the first facility.
+  if (facilities.length === 0) {
+    throw new Error("No facilities available for creating sample bookings");
+  }
 
-  // --- Create Events ---
-  // Event 1 created by Diana
-  const event1 = await prisma.event.create({
-    data: {
-      location: "Community Hall",
-      slot: new Date("2025-04-01T10:00:00.000Z"),
-      description: "Welcome Event for New Residents",
-      signUpLink: "http://example.com/event1",
-      organiserId: clerkUserDiana,
-    },
-  });
+  const mainArea =
+    facilities.find((f) => f.name === "Main Area (UL)") ?? facilities[0];
 
-  // Event 2 created by Evan
-  const event2 = await prisma.event.create({
-    data: {
-      location: "Gym",
-      slot: new Date("2025-04-01T12:00:00.000Z"),
-      description: "Fitness Workshop",
-      signUpLink: "http://example.com/event2",
-      organiserId: clerkUserEvan,
-    },
-  });
+  if (!mainArea) {
+    throw new Error("Could not find a valid facility for booking");
+  }
 
-  // Event 3 created by Diana
-  const event3 = await prisma.event.create({
-    data: {
-      location: "Upper Lounge",
-      slot: new Date("2025-04-02T09:00:00.000Z"),
-      description: "Social Gathering",
-      signUpLink: "http://example.com/event3",
-      organiserId: clerkUserDiana,
-    },
-  });
-
-  // --- Create Bookings ---
-  // Community Hall bookings
   const booking1 = await prisma.booking.create({
     data: {
-      slot: new Date("2025-04-01T10:00:00.000Z"),
+      startTime: new Date("2025-04-01T10:00:00.000Z"),
+      endTime: new Date("2025-04-01T11:00:00.000Z"),
       userId: clerkUserDiana,
-      facilityId: communityHall.id,
+      facilityId: mainArea.id,
     },
   });
 
   const booking2 = await prisma.booking.create({
     data: {
-      slot: new Date("2025-04-01T12:00:00.000Z"),
+      startTime: new Date("2025-04-01T12:00:00.000Z"),
+      endTime: new Date("2025-04-01T13:00:00.000Z"),
       userId: clerkUserEvan,
-      facilityId: communityHall.id,
+      facilityId: mainArea.id,
     },
   });
 
-  // Gym bookings
-  const booking3 = await prisma.booking.create({
+  // --- Create Sample Events ---
+  // Event 1: An event with an associated booking.
+  const event1 = await prisma.event.create({
     data: {
-      slot: new Date("2025-04-02T08:00:00.000Z"),
-      userId: clerkUserEvan,
-      facilityId: gym.id,
+      startTime: new Date("2025-04-01T10:00:00.000Z"),
+      endTime: new Date("2025-04-01T11:00:00.000Z"),
+      description: "Welcome Event for New Residents",
+      signUpLink: "http://example.com/event1",
+      bookingId: booking1.id,
+      organiserIds: [clerkUserDiana],
     },
   });
 
-  const booking4 = await prisma.booking.create({
+  // Event 2: Another event with a booking.
+  const event2 = await prisma.event.create({
     data: {
-      slot: new Date("2025-04-02T09:00:00.000Z"),
-      userId: clerkUserDiana,
-      facilityId: gym.id,
+      startTime: new Date("2025-04-01T12:00:00.000Z"),
+      endTime: new Date("2025-04-01T13:00:00.000Z"),
+      description: "Fitness Workshop",
+      signUpLink: "http://example.com/event2",
+      bookingId: booking2.id,
+      organiserIds: [clerkUserEvan],
     },
   });
 
-  // Upper Lounge bookings
-  const booking5 = await prisma.booking.create({
+  // Event 3: A personal event without a booking.
+  const event3 = await prisma.event.create({
     data: {
-      slot: new Date("2025-04-03T14:00:00.000Z"),
-      userId: clerkUserDiana,
-      facilityId: upperLounge.id,
-    },
-  });
-
-  const booking6 = await prisma.booking.create({
-    data: {
-      slot: new Date("2025-04-03T15:00:00.000Z"),
-      userId: clerkUserEvan,
-      facilityId: upperLounge.id,
+      startTime: new Date("2025-04-03T14:00:00.000Z"),
+      endTime: new Date("2025-04-03T15:00:00.000Z"),
+      description: "Social Gathering at Upper Lounge",
+      signUpLink: "http://example.com/event3",
+      organiserIds: [clerkUserDiana],
     },
   });
 
   console.log({
-    facilities: [communityHall, gym, upperLounge],
+    facilities,
+    ccas,
+    bookings: [booking1, booking2],
     events: [event1, event2, event3],
-    bookings: [booking1, booking2, booking3, booking4, booking5, booking6],
   });
 }
 

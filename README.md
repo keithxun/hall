@@ -33,6 +33,10 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 To migrate prisma:
 
 ```
+npx prisma migrate reset --force --skip-seed
+```
+
+```
 npx prisma migrate dev --name message
 ```
 
